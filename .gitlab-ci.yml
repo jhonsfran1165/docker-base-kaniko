@@ -1,0 +1,20 @@
+image: gcr.io/kaniko-project/executor:debug
+
+stages:
+  - build
+
+services:
+  - docker:18-dind
+
+variables:
+  DOCKER_HOST: tcp://localhost:2375
+  KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: gitlab-admin
+
+
+build:
+  stage:
+    build
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/node/Dockerfile --destination "$CI_REGISTRY_IMAGE/node:latest"
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/openjdk/Dockerfile --destination "$CI_REGISTRY_IMAGE/openjdk:latest"
