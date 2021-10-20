@@ -1,4 +1,4 @@
-FROM node:14.16.0-alpine
+FROM node:14.18.1-alpine
 RUN npm config set unsafe-perm true
 RUN yarn global add npm@7.24.2
 RUN apk update && apk add curl bash python3 g++ make automake autoconf libtool nasm libjpeg-turbo-dev ttf-opensans && rm -rf /var/cache/apk/*
