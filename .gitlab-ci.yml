@@ -18,6 +18,4 @@ build:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/node/Dockerfile --destination "$CI_REGISTRY_IMAGE/node:latest"
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/node/frontend.Dockerfile --destination "$CI_REGISTRY_IMAGE/frontend:latest"
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/node/node.migration.Dockerfile --destination "$CI_REGISTRY_IMAGE/node:migration"
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/node/frontend.migration.Dockerfile --destination "$CI_REGISTRY_IMAGE/frontend:migration"
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/openjdk/Dockerfile --destination "$CI_REGISTRY_IMAGE/openjdk:latest"

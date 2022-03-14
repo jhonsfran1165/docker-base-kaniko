@@ -1,1 +1,1 @@
-FROM node:16.14.0-alpine
+# Don't change this file in master, the currect version is on node-migration branch
