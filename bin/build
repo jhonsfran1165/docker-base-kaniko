@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+# Please Use Google Shell Style: https://google.github.io/styleguide/shell.xml
+
+# ---- Start unofficial bash strict mode boilerplate
+# http://redsymbol.net/articles/unofficial-bash-strict-mode/
+set -o errexit  # always exit on error
+set -o errtrace # trap errors in functions as well
+set -o pipefail # don't ignore exit codes when piping output
+set -o posix    # more strict failures in subshells
+# set -x          # enable debugging
+
+IFS=$'\n\t'
+# ---- End unofficial bash strict mode boilerplate
+
+root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+dockerfiles_to_process() {
+  declare -a args=($@)
+  if [[ ${#args[@]} -gt 0 ]]; then
+    printf '%s\n' "${args[@]}"
+    return
+  fi
+  
+  git ls-files | grep -e '/Dockerfile$'
+}
+
+main() {
+  root_scripts_dir="${root_dir}/common-scripts"
+  subcommand="$1"
+  docker_namespace="$2"
+  shift 2 # delete the 2 first arguments
+
+  # little back door to add extra flwxibility to the script
+  dockerfiles_to_process "$@" | {
+    while read -r file_path; do
+
+      name=$(echo "${file_path}" |  awk -F/ '{print $(NF-2)}')
+      context_dir=$(dirname "${file_path}")
+      tag=$(echo "${file_path}" |  awk -F/ '{print $(NF-1)}')
+
+      echo $name
+      echo $context_dir
+      echo $tags
+      # # Clear build dir
+      # rm -rf "${root_build_dir}"
+
+      # # Copy root /scripts and image context to build dir. Copy image-specific
+      # # scripts second so that they could overwrite root scripts if necessary.
+      # mkdir -p "${root_build_scripts_dir}"
+      # cp -a "${root_scripts_dir}/." "${root_build_scripts_dir}"
+      # cp -a "${context_dir}/." "${root_build_dir}"
+
+      # # Do build
+      # docker build -t "${docker_namespace}/${name}:${tag}" "${root_build_dir}" --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from "${docker_namespace}/${name}:latest"
+
+    done
+  }
+}
+
+main "$@"

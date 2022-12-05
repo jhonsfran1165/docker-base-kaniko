@@ -1,0 +1,64 @@
+# Please Use Google Shell Style: https://google.github.io/styleguide/shell.xml
+
+# ---- Start unofficial bash strict mode boilerplate
+# http://redsymbol.net/articles/unofficial-bash-strict-mode/
+set -o errexit  # always exit on error
+set -o errtrace # trap errors in functions as well
+set -o pipefail # don't ignore exit codes when piping output
+set -o posix    # more strict failures in subshells
+# set -x          # enable debugging
+
+IFS=$'\n\t'
+# ---- End unofficial bash strict mode boilerplate
+
+# change the app user's uid:gid to match the repo root directory's
+uid=$(stat -c "%u" .)
+if [[ "${uid}" == "0" ]]; then
+  # Never run as root even if directory is owned by root.
+  # Fall back to 1000 which we know is the app user
+  uid=1000
+fi
+
+run_user="${APP_USER}"
+usermod --uid "${uid}" --non-unique "${run_user}" |& grep -v "no changes" || true
+scripts_dir="$(dirname "${BASH_SOURCE[0]}")"
+
+command=(sleep infinity)
+
+if [[ $# -gt 0 ]]; then
+  # shellcheck disable=SC2206
+  command=($@)
+  command_override=true
+fi
+
+"${scripts_dir}/fix-volumes.sh" "${run_user}"
+
+# Allow to update dependencies in dev
+if [[ -f pyproject.toml ]]; then
+  echo "Installing dependencies..."
+  su-exec "${run_user}" poetry install --no-root
+fi
+
+# configure hooks
+if [[ -d ".git/hooks" && -d ".hooks" && "${ENV}" == "development" ]]; then
+  echo "Setting up git hooks"
+  cp -r .hooks/. .git/hooks
+  chown -R "${run_user}" .git/hooks/
+  chmod -R +x .git/hooks/
+fi
+
+
+if [[ -f startup ]]; then
+  echo "Executing startup tasks..."
+  su-exec "${run_user}" ./startup
+fi
+
+echo "Starting the project..."
+unset IFS
+
+if [[ "${command_override}" = true ]]; then
+  echo "Running '${command[@]}' as user root in Docker container..."
+  exec "${command[@]}"
+else
+  exec su-exec "${run_user}" "${command[@]}"
+fi
