@@ -33,7 +33,7 @@ build:
 
 generate-config-images:
   image: python:3.8-alpine
-  before_script: apk update --no-progress && apk add py-yaml -y
+  before_script: apk update --no-progress && apk add py-yaml
   stage: setup
   only:
     - feat/devops-images
