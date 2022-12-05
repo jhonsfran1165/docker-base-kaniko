@@ -57,5 +57,5 @@ docker-build:
   script:
     - bin/build ${CI_REGISTRY_IMAGE}
   interruptible: true
-  cache:
-    <<: *global_cache
+  # cache:
+  #   <<: *global_cache
