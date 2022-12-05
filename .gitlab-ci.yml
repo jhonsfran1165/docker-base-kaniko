@@ -1,116 +1,61 @@
 image: gcr.io/kaniko-project/executor:debug
 
 stages:
+  - setup
+  - triggers
   - build
+  - devops-build
 
 services:
-  - docker:18-dind
+  # - docker:18-dind # TODO: test the docker changes with last images
+  - docker:20.10-dind
 
 variables:
   DOCKER_HOST: tcp://localhost:2375
   KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: gitlab-admin
 
-cache: &global_cache
-  key: ${DOCKER_DIRECTORY}-${PROJECT}
-  paths:
-    - ${DOCKER_DIRECTORY}/${PROJECT}/kaniko/cache
+# TODO: handle cache
+# cache: &global_cache
+#   key: ${DOCKER_DIRECTORY}-${PROJECT}
+#   paths:
+#     - ${DOCKER_DIRECTORY}/${PROJECT}/kaniko/cache
 
 build:
   stage: build
-  only:
-    - main
-    - master
+  # TODO: ignore devops to avoid changes
+  except:
+    - feat/devops-images
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/node/Dockerfile --destination "$CI_REGISTRY_IMAGE/node:latest"
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/node/frontend.Dockerfile --destination "$CI_REGISTRY_IMAGE/frontend:latest"
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/openjdk/Dockerfile --destination "$CI_REGISTRY_IMAGE/openjdk:latest"
 
-build-devops:
-  stage: build
-  script:
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - bin/build
-
-# -----------------------------------------------------------------
-# development configuration ---------------------------------------
-# -----------------------------------------------------------------
-
-default:
-  image:
-    name: jhonsfran/node-prod:14.17.0-terraform
-
-stages:
-  - init
-  - plan
-  - production
-  - development
-  - destroy
-
-
-.terraform-init:
-  stage: init
-  before_script:
-    - terraform --version
-    - bin/run ${TERRAFORM_DIRECTORY} ${PROJECT} init
-  script:
-    - bin/run ${TERRAFORM_DIRECTORY} ${PROJECT} validate
-  interruptible: true
-  cache:
-    <<: *global_cache
+generate-config-images:
+  stage: setup
   only:
-    - merge_requests
-    - main
-    - master
-
-.terraform-plan:
-  stage: plan
+    - feat/devops-images
   script:
-    - bin/run ${TERRAFORM_DIRECTORY} ${PROJECT} plan
-    - bin/run ${TERRAFORM_DIRECTORY} ${PROJECT} show --json | jq -r '([.resource_changes[]?.change.actions?]|flatten)|{"create":(map(select(.=="create"))|length),"update":(map(select(.=="update"))|length),"delete":(map(select(.=="delete"))|length)}' > ${JSON_PLAN_FILE}
+    - python templates/generate-repos.py --file build-images.yaml
   artifacts:
-    name: "plan"
     paths:
-      - ${TERRAFORM_DIRECTORY}/${PROJECT}/${TERRAFORM_DIRECTORY}.tfplan
-      - ${JSON_PLAN_FILE}
-    reports:
-      terraform:
-        - ${JSON_PLAN_FILE}
-    expire_in: 15 days
-  cache:
-    <<: *global_cache
+      - templates/build-images.yaml
+
+trigger-docker-builds:
+  stage: triggers
+  only:
+    - feat/devops-images
+  trigger:
+    include:
+      - artifact: templates/build-images.yaml
+        job: generate-config-images
+
+docker-build:
+  stage: devops-build
+  only:
+    - feat/devops-images
+  script:
+    - bin/build ${CI_REGISTRY_IMAGE}
   interruptible: true
-  only:
-    - merge_requests
-    - main
-    - master
-
-.terraform-deploy:
-  script:
-    - bin/run ${TERRAFORM_DIRECTORY} ${PROJECT} apply
-  when: manual
-  allow_failure: false
   cache:
     <<: *global_cache
-  only:
-    - main
-    - master
-
-.terraform-destroy:
-  stage: destroy
-  script:
-    - bin/run ${TERRAFORM_DIRECTORY} ${PROJECT} destroy
-  when: manual
-  allow_failure: false
-  cache:
-    <<: *global_cache
-  only:
-    - main
-    - master
-
-# ------------------------------------------------------
-# ---------- add configurations per project ------------
-# ------------------------------------------------------
-include:
-  - local: templates/oceana.yaml
-  - local: templates/sip.yaml

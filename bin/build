@@ -23,14 +23,16 @@ dockerfiles_to_process() {
     return
   fi
   
-  git ls-files | grep -e '/Dockerfile$'
+  # TODO: check if it's better to rebuild all or just the files changed
+  # git ls-files | grep -e '/Dockerfile$'
+  git diff-tree --no-commit-id --name-only -r HEAD^ HEAD | grep -e '/Dockerfile$'
 }
 
 main() {
   root_scripts_dir="${root_dir}/common-scripts"
-  subcommand="$1"
-  docker_namespace="$2"
-  shift 2 # delete the 2 first arguments
+  IMAGE_NAMESPACE=${1:-"devops-images"}
+
+  shift 1 # delete first argument
 
   # little back door to add extra flwxibility to the script
   dockerfiles_to_process "$@" | {
@@ -40,20 +42,18 @@ main() {
       context_dir=$(dirname "${file_path}")
       tag=$(echo "${file_path}" |  awk -F/ '{print $(NF-1)}')
 
-      echo $name
-      echo $context_dir
-      echo $tags
-      # # Clear build dir
-      # rm -rf "${root_build_dir}"
+      # echo "name $name"
+      # echo "context_dir $context_dir"
+      # echo "tag $tag"
 
-      # # Copy root /scripts and image context to build dir. Copy image-specific
-      # # scripts second so that they could overwrite root scripts if necessary.
-      # mkdir -p "${root_build_scripts_dir}"
-      # cp -a "${root_scripts_dir}/." "${root_build_scripts_dir}"
-      # cp -a "${context_dir}/." "${root_build_dir}"
+      destination="${IMAGE_NAMESPACE}/${name}:${tag}"
 
-      # # Do build
-      # docker build -t "${docker_namespace}/${name}:${tag}" "${root_build_dir}" --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from "${docker_namespace}/${name}:latest"
+      # TODO: add common scripts
+
+      # use kaniko to build and push the image
+      echo "/kaniko/executor --context ${context_dir} --dockerfile ${file_path} --destination ${destination}"
+
+      # TODO: manage cache
 
     done
   }
