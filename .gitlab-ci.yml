@@ -32,6 +32,7 @@ build:
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/openjdk/Dockerfile --destination "$CI_REGISTRY_IMAGE/openjdk:latest"
 
 generate-config-images:
+  image: python:3.8-alpine
   stage: setup
   only:
     - feat/devops-images
