@@ -55,6 +55,7 @@ trigger-docker-builds:
     strategy: depend
     include:
       - local: .gitlab-ci.yml
+        job: .docker-builds
       - artifact: templates/build-images.yaml
         job: generate-config-images
   # TODO: apply just for merge request
