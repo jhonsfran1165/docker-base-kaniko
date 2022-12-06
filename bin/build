@@ -17,15 +17,19 @@ root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 dockerfiles_to_process() {
-  declare -a args=($@)
+  path=${1:-"images/"}
+
+  shift 1 # delete first argument
+
+  declare -a args=($@) # use for create specific dockerfiles
   if [[ ${#args[@]} -gt 0 ]]; then
     printf '%s\n' "${args[@]}"
     return
   fi
   
   # TODO: check if it's better to rebuild all or just the files changed
-  # git ls-files | grep -e '/Dockerfile$'
-  git diff-tree --no-commit-id --name-only -r HEAD^ HEAD | grep -e '/Dockerfile$'
+  git ls-files "${path}" | grep -e '/Dockerfile$'
+  # git diff-tree --no-commit-id --name-only -r HEAD^ HEAD | grep -e '/Dockerfile$'
 }
 
 main() {
@@ -53,6 +57,8 @@ main() {
       # use kaniko to build and push the image
       echo "/kaniko/executor --context ${context_dir} --dockerfile ${file_path} --destination ${destination}"
 
+      /kaniko/executor --context ${context_dir} --dockerfile ${file_path} --destination ${destination}
+
       # TODO: manage cache
 
     done
@@ -60,3 +66,10 @@ main() {
 }
 
 main "$@"
+
+# example of use
+# buil docker-namespace path-to-docker-files optional-docker-file-path
+# build devops-images images -> will look for all dockerfiles inside images folder
+# build devops-images images/serverless -> will look for all docker files inside images/serverless folder
+# build devops-images images images/serverless/base-cicd-1/Dockerfile -> will build only the Dockerfile given 
+

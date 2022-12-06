@@ -51,13 +51,3 @@ trigger-docker-builds:
     include:
       - artifact: templates/build-images.yaml
         job: generate-config-images
-
-docker-build:
-  stage: devops-build
-  only:
-    - feat/devops-images
-  script:
-    - bin/build ${CI_REGISTRY_IMAGE}
-  interruptible: true
-  # cache:
-  #   <<: *global_cache

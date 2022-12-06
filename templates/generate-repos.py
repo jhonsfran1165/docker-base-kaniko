@@ -1,4 +1,4 @@
-import os
+import os, subprocess
 import argparse
 import yaml
 
@@ -10,49 +10,40 @@ args = parser.parse_args()
 
 # Get the path of the script's directory
 script_dir = os.path.dirname(os.path.realpath(__file__))
+root_dir   = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 
 # Define the pipeline configuration template
 pipeline_template = """
 docker-build-{PROJECT}:
-  extends: docker-build
-  script: {PATH_PROJECT}
+  stage: devops-build
+  script:
+    - bin/build {CI_REGISTRY_IMAGE} {PATH_PROJECT}
+  interruptible: true
+  # cache:
+  #   <<: *global_cache
   when: 'always'
-  variables:
-    TERRAFORM_DIRECTORY: development
-    PROJECT: oceana
-    JSON_PLAN_FILE: development_plan.json
   only:
     - feat/devops-images
 """
-  
 
-# Define a list of dictionaries containing the values for the variables
-variables_list = [
-    {
-        'PROJECT': 'project1',
-        'PATH_PROJECT': './',
-    },
-    {
-        'PROJECT': 'project2',
-        'PATH_PROJECT': './',
-    },
-    {
-        'PROJECT': 'project3',
-        'PATH_PROJECT': './',
-    }
-]
+# images is the default directory for all docker images
+path        = os.path.join(root_dir, 'images')
+directories = os.listdir(path)
 
 data_pipeline = ""
 
-# Iterate over the variables and create a configuration for each set
-for variables in variables_list:
+for directory in directories:
+    path_project = path + "/" + directory
     # Use string formatting to insert the values of the variables into the template
-    data_pipeline += pipeline_template.format(**variables)
+    data_pipeline += pipeline_template.format(
+        PATH_PROJECT=path_project,
+        PROJECT=directory,
+        CI_REGISTRY_IMAGE=os.getenv("CI_REGISTRY_IMAGE", "devops-images") # should live in the CICD
+    )
 
 # Load the configuration as a dictionary
 pipeline = yaml.safe_load(data_pipeline)
-
 
 # Write the configuration to a file
 with open(os.path.join(script_dir, args.file), 'w') as file:
