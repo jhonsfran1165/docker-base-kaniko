@@ -54,29 +54,9 @@ trigger-docker-builds:
     # the entire pipeline needs to fail if the child pipeline fail
     strategy: depend
     include:
-      - local: .gitlab-ci.yml
-        job: .docker-builds
+      - local: templates/docker-build.yaml
       - artifact: templates/build-images.yaml
         job: generate-config-images
-  # TODO: apply just for merge request
-  # rules:
-  #   - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-
-# INFO: to avoid repeat this code in the different build projects, I create a template to be extended
-# Also this configuration helps to avoid unnecesary check inside the build script
-.docker-builds:
-  stage: build
-  before_script:
-    # configure kaniko credentials
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-  # cancel the job is there is a new push and the job is running
-  interruptible: true
-  # TODO: configure cache
-  # cache:
-  #   <<: *global_cache
-  when: "always"
-  only:
-    - feat/devops-images
   # TODO: apply just for merge request
   # rules:
   #   - if: $CI_PIPELINE_SOURCE == "merge_request_event"
