@@ -37,8 +37,6 @@ generate-config-images:
   only:
     - feat/devops-images
   script:
-    # configuring kaniko
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - python templates/generate-repos.py --file build-images.yaml
   artifacts:
     paths:
@@ -53,3 +51,18 @@ trigger-docker-builds:
     include:
       - artifact: templates/build-images.yaml
         job: generate-config-images
+
+# INFO: to avoid repeat this code in the different build projects, I create a template to be extended
+# Also this configuration helps to avoid unnecesary check inside the build script
+.docker-builds:
+  stage: build
+  before_script:
+    # configure kaniko credentials
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+  interruptible: true
+  # TODO: configure cache
+  # cache:
+  #   <<: *global_cache
+  when: "always"
+  only:
+    - feat/devops-images

@@ -2,7 +2,8 @@ import os, subprocess
 import argparse
 import yaml
 
-
+# TODO: better to use the build scripts as a source of dockerfiles to build and
+# better to create a manifest for each dockerfile so that way I can handle incremental changes instead of build all repos everytime?
 # Define the command-line arguments that the script accepts
 parser = argparse.ArgumentParser()
 parser.add_argument('--file', help='the name of the file to write', required=True)
@@ -16,15 +17,9 @@ root_dir   = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # Define the pipeline configuration template
 pipeline_template = """
 docker-build-{PROJECT}:
-  stage: build
+  extends: .docker-builds
   script:
     - bin/build {CI_REGISTRY_IMAGE} {PATH_PROJECT}
-  interruptible: true
-  # cache:
-  #   <<: *global_cache
-  when: 'always'
-  only:
-    - feat/devops-images
 """
 
 # images is the default directory for all docker images
