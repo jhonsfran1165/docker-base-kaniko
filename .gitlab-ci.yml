@@ -21,6 +21,9 @@ variables:
 #   paths:
 #     - ${DOCKER_DIRECTORY}/${PROJECT}/kaniko/cache
 
+# TODO: validate Dockerfiles with hadolint https://github.com/hadolint/hadolint
+# TODO: validate shell scripts with shellcheck https://www.shellcheck.net/
+
 build:
   stage: build
   # TODO: ignore devops to avoid changes
@@ -33,7 +36,7 @@ build:
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/docker/openjdk/Dockerfile --destination "$CI_REGISTRY_IMAGE/openjdk:latest"
 
 generate-config-images:
-  image: python:3.8-alpine
+  image: python:3.8-slim
   before_script: pip install pyyaml
   stage: setup
   only:
