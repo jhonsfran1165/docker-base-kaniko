@@ -48,6 +48,8 @@ trigger-docker-builds:
   stage: triggers
   only:
     - feat/devops-images
+  needs:
+    - generate-config-images
   trigger:
     # the entire pipeline needs to fail if the child pipeline fail
     strategy: depend
@@ -62,6 +64,8 @@ trigger-docker-builds:
 # Also this configuration helps to avoid unnecesary check inside the build script
 .docker-builds:
   stage: build
+  needs:
+    - generate-config-images
   before_script:
     # configure kaniko credentials
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
