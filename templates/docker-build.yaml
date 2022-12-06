@@ -6,6 +6,8 @@
   before_script:
     # configure kaniko credentials
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - pwd
+    = echo $CI_PROJECT_DIR
   # cancel the job is there is a new push and the job is running
   interruptible: true
   # TODO: configure cache
