@@ -26,7 +26,7 @@ dockerfiles = ""
 try:
     # execute the script and save the output -> bin/build
     dockerfiles = check_output(
-        ["bash", script, REGISTRY_REPO, args.path, args.dockerfile],
+        [script, REGISTRY_REPO, args.path, args.dockerfile],
         stderr=STDOUT, 
         text=True
     )
