@@ -4,7 +4,6 @@ stages:
   - setup
   - triggers
   - build
-  - devops-build
 
 services:
   # - docker:18-dind # TODO: test the docker changes with last images

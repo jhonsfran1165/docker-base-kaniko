@@ -16,7 +16,7 @@ root_dir   = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # Define the pipeline configuration template
 pipeline_template = """
 docker-build-{PROJECT}:
-  stage: devops-build
+  stage: build
   script:
     - bin/build {CI_REGISTRY_IMAGE} {PATH_PROJECT}
   interruptible: true
