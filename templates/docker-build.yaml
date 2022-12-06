@@ -6,9 +6,9 @@
   before_script:
     # configure kaniko credentials
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    # configure global scripts
+    # configure global scripts and link them to the local folder to build images
     - cp -a "${GLOBAL_SCRIPTS}/." "${CONTEXT}/scripts"
-  scripts:
+  script:
     - /kaniko/executor --context ${CONTEXT} --dockerfile ${DOCKERFILE} --destination ${IMAGE_NAME}
   # cancel the job is there is a new push and the job is running
   interruptible: true

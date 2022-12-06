@@ -71,4 +71,6 @@ WORKDIR /opt/app
 # hadolint ignore=DL3002
 USER root
 # use tini to handle process PID 1
+# this is the default entrypoint for non prod images
+# override it in the scripts directory if you need some other behavior
 ENTRYPOINT ["/usr/bin/tini", "--", "/opt/scripts/entrypoint.sh"]
