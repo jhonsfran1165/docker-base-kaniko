@@ -1,6 +1,7 @@
 # INFO: to avoid repeat this code in the different build projects, I create a template to be extended
 # Also this configuration helps to avoid unnecesary check inside the build script
 .docker-builds:
+  image: gcr.io/kaniko-project/executor:debug
   stage: build
   before_script:
     # configure kaniko credentials
