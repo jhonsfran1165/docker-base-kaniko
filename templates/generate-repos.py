@@ -17,9 +17,9 @@ root_dir   = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # Define the pipeline configuration template
 pipeline_template = """
 docker-build-{PROJECT}:
-  extends: .docker-builds
-  script:
-    - bin/build {CI_REGISTRY_IMAGE} {PATH_PROJECT}
+    extends: .docker-builds
+    script:
+        - bin/build {REGISTRY_REPO} {PATH_PROJECT}
 """
 
 # images is the default directory for all docker images
@@ -34,7 +34,7 @@ for directory in directories:
     data_pipeline += pipeline_template.format(
         PATH_PROJECT=path_project,
         PROJECT=directory,
-        CI_REGISTRY_IMAGE=os.getenv("CI_REGISTRY_IMAGE", "devops-images") # should live in the CICD
+        REGISTRY_REPO=os.getenv("REGISTRY_REPO", "devops-images") # should live in the CICD
     )
 
 # Load the configuration as a dictionary
