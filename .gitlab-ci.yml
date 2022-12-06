@@ -33,7 +33,7 @@ build:
 
 generate-config-images:
   image: python:3.8-alpine
-  before_script: pip install py-yaml
+  before_script: pip install pyyaml
   stage: setup
   only:
     - feat/devops-images
