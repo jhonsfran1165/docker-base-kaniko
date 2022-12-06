@@ -54,14 +54,8 @@ main() {
 
       destination="${IMAGE_NAMESPACE}/${name}:${tag}"
 
-      # TODO: add common scripts
-
-      # use kaniko to build and push the image
-      echo "/kaniko/executor --context ${context_dir} --dockerfile ${file_path} --destination ${destination}"
-
-      /kaniko/executor --context ${context_dir} --dockerfile ${file_path} --destination ${destination}
-
-      # TODO: manage cache
+      # return parameters to configure a pipeline
+      echo "${context_dir}*${file_path}*${destination}*${root_scripts_dir}"
 
     done
   }

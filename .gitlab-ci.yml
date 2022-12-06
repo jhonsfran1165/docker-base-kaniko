@@ -12,6 +12,7 @@ services:
 variables:
   DOCKER_HOST: tcp://localhost:2375
   KUBERNETES_SERVICE_ACCOUNT_OVERWRITE: gitlab-admin
+  # child pipelines inhirient global variables
   REGISTRY_REPO: $CI_REGISTRY_IMAGE
 
 # TODO: handle cache
@@ -38,11 +39,10 @@ generate-config-images:
   only:
     - feat/devops-images
   script:
-    - python templates/generate-repos.py --file build-images.yaml
+    - python templates/generate-repos.py --file build-images.yaml --path images
   artifacts:
     paths:
       - templates/build-images.yaml
-      # - /kaniko/.docker/config.json
 
 trigger-docker-builds:
   stage: triggers
