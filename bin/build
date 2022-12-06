@@ -28,8 +28,10 @@ dockerfiles_to_process() {
   fi
   
   # TODO: check if it's better to rebuild all or just the files changed
-  git ls-files "${path}" | grep -e '/Dockerfile$'
   # git diff-tree --no-commit-id --name-only -r HEAD^ HEAD | grep -e '/Dockerfile$'
+  # TODO: git is not installed inside kaniko - leave it work with find command for now
+  # git ls-files "${path}" | grep -e '/Dockerfile$'
+  find "${path}" -type f | grep -e '/Dockerfile$' # get all dockerfiles from the path
 }
 
 main() {

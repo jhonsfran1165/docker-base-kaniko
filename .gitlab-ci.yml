@@ -37,10 +37,13 @@ generate-config-images:
   only:
     - feat/devops-images
   script:
+    # configuring kaniko
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - python templates/generate-repos.py --file build-images.yaml
   artifacts:
     paths:
       - templates/build-images.yaml
+      # - /kaniko/.docker/config.json
 
 trigger-docker-builds:
   stage: triggers
